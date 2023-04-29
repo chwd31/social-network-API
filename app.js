@@ -18,8 +18,9 @@ db.once('open', function() {
   console.log('Connected to MongoDB');
 });
 
-app.use('/api', apiRoutes);
+app.use('/users', apiRoutes);
 
 app.listen(port, function() {
     console.log(`Server started on port ${port}`);
   });
+  
