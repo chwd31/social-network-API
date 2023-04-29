@@ -1,69 +1,25 @@
 const express = require('express');
-const router = express.Router();
-const User = require('../models/user');
-const Thought = require('../models/thought');
-const Reaction = require('../models/reaction');
-const Friend = require('../models/friend');
-const moment = require('moment');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const apiRoutes = require('./routes/api');
+require('dotenv').config();
 
-router.post('/users', function(req, res) {
-  const user = new User(req.body);
-  user.save(function(err) {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.send(user);
-    }
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(bodyParser.json());
+
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.set('debug', true);
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('Connected to MongoDB');
+});
+
+app.use('/api', apiRoutes);
+
+app.listen(port, function() {
+    console.log(`Server started on port ${port}`);
   });
-});
-
-router.get('/users', function(req, res) {
-  User.find({})
-    .populate('thoughts')
-    .populate('friends')
-    .exec(function(err, users) {
-      if (err) {
-        res.status(500).send(err);
-      } else {
-        res.send(users);
-      }
-    });
-});
-
-router.post('/thoughts', function(req, res) {
-  const thought = new Thought(req.body);
-  thought.save(function(err) {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      User.findByIdAndUpdate(
-        req.body.userId,
-        { $push: { thoughts: thought } },
-        function(err) {
-          if (err) {
-            res.status(500).send(err);
-          } else {
-            res.send(thought);
-          }
-        }
-      );
-    }
-  });
-});
-
-router.get('/thoughts', function(req, res) {
-  Thought.find({})
-    .populate('reactions')
-    .exec(function(err, thoughts) {
-      if (err) {
-        res.status(500).send(err);
-      } else {
-        res.send(thoughts);
-      }
-    });
-});
-
-// Define other endpoints for reactions and friends
-// ...
-
-module.exports = router;
