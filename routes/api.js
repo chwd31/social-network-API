@@ -30,6 +30,20 @@ router.get('/users', function(req, res) {
     });
 });
 
+router.get('/users/:userId', function(req, res) {
+    User.findById(req.params.userId)
+      .populate('thoughts')
+      .populate('friends')
+      .exec(function(err, user) {
+        if (err) {
+          res.status(500).send(err);
+        } else {
+          res.send(user);
+        }
+      });
+  });
+  
+
 router.post('/thoughts', function(req, res) {
   const thought = new Thought(req.body);
   thought.save(function(err) {
@@ -69,6 +83,23 @@ router.get('/thoughts', function(req, res) {
       }  
     });
 });
+
+router.get('/thoughts/:id', function(req, res) {
+    Thought.findById(req.params.id)
+      .populate('reactions')
+      .exec(function(err, thought) {
+        if (err) {
+          res.status(500).send(err);
+        } else if (!thought) {
+          res.status(404).send("Thought not found");
+        } else {
+          const formattedDate = moment(thought.createdAt).format('YYYY-MM-DD');
+          thought.createdAt = formattedDate;
+          res.send(thought);
+        }  
+      });
+  });
+  
 
 // Define other endpoints for reactions and friends
 router.post('/friends', function(req, res) {
